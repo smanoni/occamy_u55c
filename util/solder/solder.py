@@ -342,8 +342,10 @@ class AxiStruct:
         code += f"logic [{(dw + 7) // 8 - 1}:0], "
         if enable_multicast:
             user_t = "struct packed {"
-            user_t += f"logic [{max(0, aw - 1)}:0] mcast; "
-            user_t += f"logic [{max(0, uw - aw - 1)}:0] atomics_id;}}"
+            user_t += f"logic [{max(0, aw - 1)}:0] mcast;"
+            if uw > aw:
+                user_t += f" logic [{max(0, uw - aw - 1)}:0] atomics_id;"
+            user_t += "}"
         else:
             user_t = f"logic [{max(0, uw - 1)}:0]"
         code += f"{user_t})\n"
@@ -1587,7 +1589,8 @@ class AxiXbar(Xbar):
                 if not self.outputs[i]['is_mcast_target']:
                     if self.outputs[i+1]['is_mcast_target']:
                         violations.append(True)
-            assert (not violations), 'Multicast-targetable slaves must be at lower indices'
+            assert (not violations), \
+                f'{self.name}: multicast-targetable slaves must be at lower indices'
             # Sort address map rules by `is_multicast_rule` to ensure that
             # multicast rules are at lower indices
             self.addrmap.sort(key=operator.itemgetter('is_mcast_rule'))
