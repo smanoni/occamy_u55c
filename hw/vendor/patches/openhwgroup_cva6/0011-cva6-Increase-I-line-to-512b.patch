@@ -1,0 +1,102 @@
+From 1acc386352f9c131623828424701bc9006e0c0a6 Mon Sep 17 00:00:00 2001
+From: Luca Colagrande <luca.colagrande3@gmail.com>
+Date: Sat, 29 Jul 2023 09:42:04 +0200
+Subject: [PATCH] cva6: Increase I$ line to 512b
+
+---
+ Bender.yml                    | 10 ++++++
+ core/include/cv64a6_occamy.sv | 61 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 71 insertions(+)
+ create mode 100644 hw/vendor/openhwgroup_cva6/core/include/cv64a6_occamy.sv
+
+diff --git a/Bender.yml b/Bender.yml
+index fe6cf679..b3ed7030 100644
+--- a/Bender.yml
++++ b/Bender.yml
+@@ -27,6 +27,16 @@ sources:
+           - core/mmu_sv39/mmu.sv
+           - core/mmu_sv39/ptw.sv
+ 
++      - target: cv64a6_occamy
++        files:
++          - core/include/cv64a6_occamy.sv
++          - core/include/riscv_pkg.sv
++          - core/include/ariane_dm_pkg.sv
++          - core/include/ariane_pkg.sv
++          - core/mmu_sv39/tlb.sv
++          - core/mmu_sv39/mmu.sv
++          - core/mmu_sv39/ptw.sv
++
+       - target: cv32a6_imac_sv0
+         files:
+           - core/include/cv32a6_imac_sv0_config_pkg.sv
+diff --git a/core/include/cv64a6_occamy.sv b/core/include/cv64a6_occamy.sv
+new file mode 100644
+index 00000000..8e68bd17
+--- /dev/null
++++ b/core/include/cv64a6_occamy.sv
+@@ -0,0 +1,61 @@
++// Copyright 2021 Thales DIS design services SAS
++//
++// Licensed under the Solderpad Hardware Licence, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.0
++// You may obtain a copy of the License at https://solderpad.org/licenses/
++//
++// Original Author: Jean-Roch COULON - Thales
++
++
++package cva6_config_pkg;
++
++    localparam CVA6ConfigXlen = 64;
++
++    localparam CVA6ConfigFpuEn = 1;
++    localparam CVA6ConfigF16En = 0;
++    localparam CVA6ConfigF16AltEn = 0;
++    localparam CVA6ConfigF8En = 0;
++    localparam CVA6ConfigF8AltEn = 0;
++    localparam CVA6ConfigFVecEn = 0;
++
++    localparam CVA6ConfigCvxifEn = 1;
++    localparam CVA6ConfigCExtEn = 1;
++    localparam CVA6ConfigAExtEn = 1;
++
++    localparam CVA6ConfigFetchUserEn = 0;
++    localparam CVA6ConfigFetchUserWidth = CVA6ConfigXlen;
++    localparam CVA6ConfigDataUserEn = 0;
++    localparam CVA6ConfigDataUserWidth = CVA6ConfigXlen;
++
++    localparam CVA6ConfigRenameEn = 0;
++
++    localparam CVA6ConfigIcacheByteSize = 16384;
++    localparam CVA6ConfigIcacheSetAssoc = 4;
++    localparam CVA6ConfigIcacheLineWidth = 512;
++    localparam CVA6ConfigDcacheByteSize = 32768;
++    localparam CVA6ConfigDcacheSetAssoc = 8;
++    localparam CVA6ConfigDcacheLineWidth = 128;
++
++    localparam CVA6ConfigDcacheIdWidth = 1;
++
++    localparam CVA6ConfigNrCommitPorts = 2;
++    localparam CVA6ConfigNrScoreboardEntries = 8;
++
++    localparam CVA6ConfigFPGAEn = 0;
++
++    localparam CVA6ConfigNrLoadPipeRegs = 1;
++    localparam CVA6ConfigNrStorePipeRegs = 0;
++
++    localparam CVA6ConfigInstrTlbEntries = 16;
++    localparam CVA6ConfigDataTlbEntries = 16;
++
++    localparam CVA6ConfigRASDepth = 2;
++    localparam CVA6ConfigBTBEntries = 32;
++    localparam CVA6ConfigBHTEntries = 128;
++
++    localparam CVA6ConfigNrPMPEntries = 8;
++
++    localparam CVA6ConfigPerfCounterEn = 1;
++
++endpackage
+-- 
+2.28.0
+
