@@ -178,6 +178,7 @@ sources:
       - core/cache_subsystem/amo_alu.sv
       - core/cache_subsystem/wt_l15_adapter.sv
       - corev_apu/tb/axi_adapter.sv
+      - corev_apu/tb/axi_mcast_adapter.sv
       - core/cache_subsystem/miss_handler.sv
       - core/cache_subsystem/std_nbdcache.sv
       - core/cache_subsystem/cva6_icache_axi_wrapper.sv
