@@ -4,5 +4,5 @@
 
 overrides:
   axi:                { git: https://github.com/pulp-platform/axi.git,                rev: feature/multicast-xbar }
-  common_cells:       { git:  https://github.com/pulp-platform/common_cells.git,      rev: multicast-xbar }
+  common_cells:       { git: https://github.com/pulp-platform/common_cells.git,       rev: multicast-xbar }
   register_interface: { git: https://github.com/pulp-platform/register_interface.git, version: 0.4.2 }
