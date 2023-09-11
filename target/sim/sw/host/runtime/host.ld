@@ -7,6 +7,7 @@ ENTRY(_start)
 MEMORY
 {
     DRAM (rwxa) : ORIGIN = 0x80000000, LENGTH = 0x80000000
+    NC_SPM (rwxa) : ORIGIN = 0x70080000, LENGTH = 0x80000
 }
 
 SECTIONS
@@ -40,6 +41,12 @@ SECTIONS
     . = ALIGN(8);
     __bss_end = . ;
   } > DRAM
+
+  .nc_spm :
+  {
+    *(.nc_spm)
+    . = ALIGN(8);
+  } > NC_SPM
 
   __end = .;
 
