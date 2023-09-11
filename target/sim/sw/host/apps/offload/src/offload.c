@@ -16,7 +16,7 @@ int main() {
     program_snitches();
 
     // Start Snitches
-    wakeup_snitches_cl();
+    wakeup_snitches();
 
     // Wait for job done
     wait_snitches_done();

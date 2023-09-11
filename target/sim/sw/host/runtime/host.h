@@ -13,4 +13,6 @@ static inline volatile uint32_t* get_shared_lock();
 
 static inline void wait_sw_interrupt();
 
-static inline void clear_sw_interrupt(uint32_t hartid);
+static inline void multicast(uint64_t addr, uint64_t mask, uint64_t value);
+
+static inline void multicast_to_clusters(uint64_t addr, uint64_t value);

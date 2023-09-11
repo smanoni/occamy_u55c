@@ -27,6 +27,13 @@ re_trailws = re.compile(r'[ \t\r]+$', re.MULTILINE)
 DEFAULT_NAME = "occamy"
 
 
+def clog2(x):
+    """Ceiling of log2"""
+    if x <= 0:
+        raise ValueError("domain error")
+    return (x-1).bit_length()
+
+
 def write_template(tpl_path, outdir, fname=None, **kwargs):
     if tpl_path:
         tpl_path = pathlib.Path(tpl_path).absolute()
@@ -136,6 +143,7 @@ def main():
     nr_s1_quadrants = occamy.cfg["nr_s1_quadrant"]
     nr_s1_clusters = occamy.cfg["s1_quadrant"]["nr_clusters"]
     is_remote_quadrant = occamy.cfg["is_remote_quadrant"]
+    enable_multicast = occamy.cfg["enable_multicast"]
     # Iterate over Hives to get the number of cores.
     nr_cluster_cores = len([
         core for hive in occamy.cfg["cluster"]["hives"]
@@ -671,17 +679,20 @@ def main():
         fall_through=occamy.cfg["narrow_xbar"]["fall_through"],
         no_loopback=True,
         context="soc",
-        node=am_soc_narrow_xbar)
+        node=am_soc_narrow_xbar,
+        enable_multicast=enable_multicast)
 
     for i in range(nr_s1_quadrants):
         soc_narrow_xbar.add_output_symbolic_multi("s1_quadrant_{}".format(i),
-                                                  [("s1_quadrant_base_addr",
+                                                  [(f"s1_quadrant_base_addr[{i}]",
                                                     "S1QuadrantAddressSpace"),
-                                                   ("s1_quadrant_cfg_base_addr",
-                                                    "S1QuadrantCfgAddressSpace")])
+                                                   (f"s1_quadrant_cfg_base_addr[{i}]",
+                                                    "S1QuadrantCfgAddressSpace")],
+                                                  is_mcast_target=enable_multicast,
+                                                  forward_mcast=enable_multicast)
         soc_narrow_xbar.add_input("s1_quadrant_{}".format(i))
 
-    soc_narrow_xbar.add_input("cva6")
+    soc_narrow_xbar.add_input("cva6", is_mcast_master=enable_multicast)
     soc_narrow_xbar.add_input("soc_wide")
     soc_narrow_xbar.add_input("periph")
     soc_narrow_xbar.add_input("pcie")
@@ -712,9 +723,9 @@ def main():
 
     # We need 3 "crossbars", which are really simple muxes and demuxes
     quadrant_s1_ctrl_xbars = dict()
-    for name, (iw, lm) in {
-        'soc_to_quad': (soc_narrow_xbar.iw_out(), "axi_pkg::CUT_SLV_PORTS"),
-        'quad_to_soc': (soc_narrow_xbar.iw, "axi_pkg::CUT_MST_PORTS"),
+    for name, (iw, lm, forward_mcast) in {
+        'soc_to_quad': (soc_narrow_xbar.iw_out(), "axi_pkg::CUT_SLV_PORTS", enable_multicast),
+        'quad_to_soc': (soc_narrow_xbar.iw, "axi_pkg::CUT_MST_PORTS", False),
     }.items():
         # Reuse (preserve) narrow Xbar IDs and max transactions
         quadrant_s1_ctrl_xbars[name] = solder.AxiXbar(
@@ -729,13 +740,13 @@ def main():
             max_mst_trans=occamy.cfg["narrow_xbar"]["max_mst_trans"],
             fall_through=occamy.cfg["narrow_xbar"]["fall_through"],
             latency_mode=lm,
-            context="quadrant_s1_ctrl")
+            context="quadrant_s1_ctrl",
+            forward_mcast=forward_mcast)
 
-    for name in ['soc_to_quad', 'quad_to_soc']:
-        quadrant_s1_ctrl_xbars[name].add_output("out", [])
-        quadrant_s1_ctrl_xbars[name].add_input("in")
+        quadrant_s1_ctrl_xbars[name].add_output("out", [], forward_mcast=forward_mcast)
+        quadrant_s1_ctrl_xbars[name].add_input("in", is_mcast_master=forward_mcast)
         quadrant_s1_ctrl_xbars[name].add_output_symbolic("internal",
-                                                         "internal_xbar_base_addr",
+                                                         "internal_xbar_base_addr[0]",
                                                          "S1QuadrantCfgAddressSpace")
 
     # AXI Lite mux to combine register requests
@@ -773,6 +784,12 @@ def main():
         context="quadrant_s1",
         node=am_wide_xbar_quadrant_s1[0])
 
+    num_slave_ports = nr_s1_clusters + 1
+    default_mst_port_idx_bits = clog2(nr_s1_clusters + 1)
+    default_mst_port_idx = "{0:b}".format(nr_s1_clusters)
+    default_mst_port_idx = "{}'b{}".format(default_mst_port_idx_bits*num_slave_ports,
+                                           default_mst_port_idx*num_slave_ports)
+
     narrow_xbar_quadrant_s1 = solder.AxiXbar(
         48,
         64,
@@ -787,24 +804,29 @@ def main():
         ["max_mst_trans"],
         fall_through=occamy.cfg["s1_quadrant"]["narrow_xbar"]["fall_through"],
         no_loopback=True,
-        context="quadrant_s1")
+        context="quadrant_s1",
+        enable_multicast=enable_multicast,
+        default_mst_port_idx=default_mst_port_idx)
 
     wide_xbar_quadrant_s1.add_output("top", [])
     wide_xbar_quadrant_s1.add_input("top")
 
-    narrow_xbar_quadrant_s1.add_output("top", [])
-    narrow_xbar_quadrant_s1.add_input("top")
+    narrow_xbar_quadrant_s1.add_input("top", is_mcast_master=enable_multicast)
 
     for i in range(nr_s1_clusters):
         wide_xbar_quadrant_s1.add_output_symbolic("cluster_{}".format(i),
-                                                  "cluster_base_addr",
+                                                  f"cluster_base_addr[{i}]",
                                                   "ClusterAddressSpace")
 
         wide_xbar_quadrant_s1.add_input("cluster_{}".format(i))
         narrow_xbar_quadrant_s1.add_output_symbolic("cluster_{}".format(i),
-                                                    "cluster_base_addr",
-                                                    "ClusterAddressSpace")
+                                                    f"cluster_base_addr[{i}]",
+                                                    "ClusterAddressSpace",
+                                                    is_mcast_target=enable_multicast,
+                                                    forward_mcast=False)
         narrow_xbar_quadrant_s1.add_input("cluster_{}".format(i))
+
+    narrow_xbar_quadrant_s1.add_output("top", [])
 
     # remote downstream mux
     rmq_mux = [None]*max(nr_remote_quadrants, 1 if is_remote_quadrant else 0)
@@ -850,6 +872,10 @@ def main():
                                     aw=soc_axi_lite_narrow_periph_xbar.aw,
                                     dw=soc_axi_lite_narrow_periph_xbar.dw,
                                     name="apb_hbm_cfg")
+
+    ###########
+    # CodeGen #
+    ###########
 
     kwargs = {
         "solder": solder,
@@ -898,18 +924,11 @@ def main():
     ###########################
     # SoC (fully synchronous) #
     ###########################
+
     write_template(args.soc_sv,
                    outdir,
                    module=solder.code_module['soc'],
                    soc_periph_xbar=soc_axi_lite_periph_xbar,
-                   **kwargs)
-
-    ##########################
-    # S1 Quadrant controller #
-    ##########################
-    write_template(args.quadrant_s1_ctrl,
-                   outdir,
-                   module=solder.code_module['quadrant_s1_ctrl'],
                    **kwargs)
 
     ###############
@@ -929,6 +948,14 @@ def main():
                 print(outdir, args.name)
                 with open("{}/{}_quadrant_s1.sv".format(outdir, args.name), 'w') as f:
                     f.write("// no quadrants in this design")
+
+    ##########################
+    # S1 Quadrant controller #
+    ##########################
+    write_template(args.quadrant_s1_ctrl,
+                   outdir,
+                   module=solder.code_module['quadrant_s1_ctrl'],
+                   **kwargs)
 
     ##################
     # Xilinx Wrapper #
