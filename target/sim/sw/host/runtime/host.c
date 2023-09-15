@@ -201,9 +201,7 @@ static inline void wakeup_cluster(uint32_t cluster_id) {
 /**
  * @brief Wake-up Snitches
  *
- * @detail All Snitches are "parked" in a WFI. A SW interrupt
- *         must be issued to "unpark" every Snitch. This function
- *         sends a SW interrupt to all Snitches.
+ * @detail Send a cluster interrupt to all Snitches
  */
 static inline void wakeup_snitches() {
 #ifdef MULTICAST
@@ -610,15 +608,20 @@ void deactivate_interleaved_mode_hbm() {
 //===============================================================
 
 static inline void multicast(uint64_t addr, uint64_t mask, uint64_t value) {
-    asm volatile(
-        "csrw 0x7c0, %[mask]\n"
-        "sw   %[value], 0(%[addr])\n"
-        "csrw 0x7c0, 0"
-        :
-        : [ mask ] "r"(mask), [ value ] "r"(value), [ addr ] "r"(addr)
-        :);
+    enable_multicast(mask);
+    uint64_t* p = (uint64_t*)addr;
+    *p = value;
+    disable_multicast();
+}
+
+static inline void enable_multicast(uint64_t mask) {
+    asm volatile("csrw 0x7c0, %[mask]\n" : : [ mask ] "r"(mask) : "memory");
+}
+
+static inline void disable_multicast() {
+    asm volatile("csrw 0x7c0, 0" : : : "memory");
 }
 
 static inline void multicast_to_clusters(uint64_t addr, uint64_t value) {
-    multicast(addr, (N_CLUSTERS - 1) << 18, value);
+    multicast(addr, CLUSTER_BCAST_MASK, value);
 }
