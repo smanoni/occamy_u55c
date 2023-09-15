@@ -205,9 +205,22 @@ static inline void wakeup_cluster(uint32_t cluster_id) {
  */
 static inline void wakeup_snitches() {
 #ifdef MULTICAST
-    multicast_to_clusters(cluster_clint_set_addr(0), 511);
+
+#ifdef N_CLUSTERS_TO_USE
+    uint64_t mask = ((N_CLUSTERS_TO_USE - 1) << 18);
 #else
-    for (int i = 0; i < N_CLUSTERS; i++) wakeup_cluster(i);
+    uint64_t mask = ((N_CLUSTERS - 1) << 18);
+#endif
+
+    multicast(cluster_clint_set_addr(0), mask, 511);
+#else
+
+#ifdef N_CLUSTERS_TO_USE
+    for (int i = N_CLUSTERS_TO_USE - 1; i >= 0; i--) wakeup_cluster(i);
+#else
+    for (int i = N_CLUSTERS - 1; i >= 0; i--) wakeup_cluster(i);
+#endif
+
 #endif
 }
 
