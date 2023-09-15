@@ -42,6 +42,15 @@ SECTIONS
     __bss_end = . ;
   } > DRAM
 
+  .wide_spm :
+  {
+    . = ALIGN(8);
+    __wide_spm_start = . ;
+    *(.wide_spm)
+    . = ALIGN(8);
+    __wide_spm_end = . ;
+  } > DRAM
+
   .nc_spm :
   {
     *(.nc_spm)
