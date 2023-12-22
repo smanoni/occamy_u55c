@@ -16,13 +16,14 @@ HW_SERVER   := bordcomputer:3231
 
 BENDER ?= bender
 
-# Select VCU128-02
+# Select u55c-02
 ifeq ($(VCU),02)
 	FPGA_ID := 091847100638A
 	HW_SERVER := bordcomputer:3232
 endif
 
-VIVADO ?= vitis-2020.2 vivado
+#VIVADO ?= vitis-2020.2 vivado
+VIVADO ?= vitis-2022.1 vivado
 MKIMAGE ?= $(CURDIR)/br2_external/install/bin/mkimage
 NPROC  ?= $(shell nproc)
 
@@ -34,7 +35,7 @@ LINUX_UIMAGE ?= ${CVA6_SDK}/uImage
 DTB = bootrom/occamy.dtb
 
 default: all
-all: occamy_vcu128
+all: occamy_u55c
 
 vivado_ips/occamy_xilinx:
 	${MAKE} -C vivado_ips occamy_xilinx
@@ -42,22 +43,26 @@ vivado_ips/occamy_xilinx:
 bootrom/bootrom-spl.coe:
 	${MAKE} -C bootrom
 
-occamy_vcu128: vivado_ips/occamy_xilinx bootrom/bootrom-spl.coe define_defines_includes_no_simset.tcl
-	${VIVADO} -mode gui -source occamy_vcu128.tcl -tclargs $(DEBUG) $(EXT_JTAG) $(NPROC) ${MKFILE_DIR}/bootrom/bootrom-spl.coe
+#occamy_u55c: vivado_ips/occamy_xilinx bootrom/bootrom-spl.coe define_defines_includes_no_simset.tcl
+#	${VIVADO} -mode gui -source occamy_u55c.tcl -tclargs $(DEBUG) $(EXT_JTAG) $(NPROC) ${MKFILE_DIR}/bootrom/bootrom-spl.coe
+
+occamy_u55c: vivado_ips/occamy_xilinx define_defines_includes_no_simset.tcl
+	${VIVADO} -mode gui -source occamy_u55c.tcl -tclargs $(DEBUG) $(EXT_JTAG) $(NPROC)
+
 
 define_defines_includes_no_simset.tcl: $(BENDER_FILES)
 	${BENDER} script vivado -t cv64a6_imafdc_sv39 --only-defines --only-includes --no-simset > $@
 
 program:
-	${VIVADO} -mode batch -source occamy_vcu128_program.tcl -tclargs ${VCU}
+	${VIVADO} -mode batch -source occamy_u55c_program.tcl -tclargs ${VCU}
 
 flash: ${FILE}
-	${VIVADO} -mode batch -source occamy_vcu128_flash.tcl -tclargs ${HW_SERVER} ${FPGA_ID} flash.mcs ${OFFSET} ${FILE}
+	${VIVADO} -mode batch -source occamy_u55c_flash.tcl -tclargs ${HW_SERVER} ${FPGA_ID} flash.mcs ${OFFSET} ${FILE}
 	rm flash.mcs
 
 # Flash only uboot (made for TFTP bootmode), overwrite the bootrom, and reset the board
 flashrun: ${UBOOT_ITB}
-	${VIVADO} -mode batch -source occamy_vcu128_flashrun.tcl -tclargs ${HW_SERVER} ${FPGA_ID} flash.mcs 6000000 ${UBOOT_ITB}
+	${VIVADO} -mode batch -source occamy_u55c_flashrun.tcl -tclargs ${HW_SERVER} ${FPGA_ID} flash.mcs 6000000 ${UBOOT_ITB}
 	rm flash.mcs
 
 flash-u-boot:
@@ -68,6 +73,6 @@ flash-uimage:
 	${MAKE} flash FILE=${LINUX_UIMAGE} OFFSET=0x6100000
 
 clean:
-	rm -rf .Xil occamy_vcu128 *.jou *.log *.str define_defines_includes_no_simset.tcl
+	rm -rf .Xil occamy_u55c *.jou *.log *.str define_defines_includes_no_simset.tcl
 
 .PHONY: program flash clean

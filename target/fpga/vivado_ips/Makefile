@@ -8,8 +8,10 @@ MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 MKFILE_DIR  := $(dir $(MKFILE_PATH))
 ROOT        := ${MKFILE_DIR}../../../../..
 DEBUG       ?= 0
+EXT_TARGET  ?= 0
 
-VIVADO ?= vitis-2020.2 vivado
+#VIVADO ?= vitis-2020.2 vivado
+VIVADO = vitis-2022.1 vivado
 BENDER ?= bender
 
 BENDER_TARGETS += -t cv64a6_imafdc_sv39 -t occamy

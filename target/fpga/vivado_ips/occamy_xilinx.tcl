@@ -14,7 +14,8 @@ if {$argc > 1 && [lindex $argv 1]} { set EXT_JTAG true }
 # Create project
 set project occamy_xilinx
 
-create_project $project ./occamy_xilinx -force -part xcvu37p-fsvh2892-2L-e
+#create_project $project ./occamy_xilinx -force -part xcvu37p-fsvh2892-2L-e
+create_project $project ./occamy_xilinx -force -part xcu55c-fsvh2892-2L-e 
 set_property XPM_LIBRARIES XPM_MEMORY [current_project]
 
 # Define sources
@@ -35,6 +36,15 @@ set_property IS_ENABLED 0 [get_files -regex .*/reg_intf.sv]
 set_property top occamy_xilinx [current_fileset]
 
 update_compile_order -fileset sources_1
+
+get_msg_config -limit -id "Synth 8-478"
+
+set_msg_config -id "Synth 8-478" -limit 500
+
+get_msg_config -limit -id "Synth 8-478"
+
+#set_msg_config -id "Synth 8-478" -new WARNING
+
 synth_design -rtl -name rtl_1
 
 ipx::package_project -root_dir . -vendor ethz.ch -library user -taxonomy /UserIP -set_current true
