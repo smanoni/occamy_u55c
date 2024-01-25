@@ -28,8 +28,10 @@ set_property ip_repo_paths ./vivado_ips [current_project]
 update_ip_catalog
 
 # Create block design
-exec sed -i "s|CONFIG.Coe_File {.*}|CONFIG.Coe_File {$coe_path}|g" occamy_u55c_bd.tcl
+#exec sed -i "s|CONFIG.Coe_File {.*}|CONFIG.Coe_File {$coe_path}|g" occamy_u55c_bd.tcl
 #source occamy_u55c_bd.tcl
+
+exec sed -i "s|CONFIG.Coe_File {.*}|CONFIG.Coe_File {$coe_path}|g" occamy_u55c_no_eth_ext_jtag_bd.tcl
 source occamy_u55c_no_eth_ext_jtag_bd.tcl
 
 # Add constraint files
