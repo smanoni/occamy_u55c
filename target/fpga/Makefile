@@ -9,7 +9,7 @@ MKFILE_DIR  := $(dir $(MKFILE_PATH))
 ROOT        := ${MKFILE_DIR}../../../..
 CVA6_SDK    ?= ${ROOT}/../cva6-sdk
 DEBUG       ?= 0
-EXT_JTAG    ?= 0
+EXT_JTAG     = 0
 VCU         ?= 01
 FPGA_ID     := 091847100576A
 HW_SERVER   := bordcomputer:3231
@@ -38,7 +38,7 @@ default: all
 all: occamy_u55c
 
 vivado_ips/occamy_xilinx:
-	${MAKE} -C vivado_ips occamy_xilinx
+	${MAKE} EXT_JTAG=$(EXT_JTAG) DEBUG=$(DEBUG) -C vivado_ips occamy_xilinx
 
 bootrom/bootrom-spl.coe:
 	${MAKE} -C bootrom

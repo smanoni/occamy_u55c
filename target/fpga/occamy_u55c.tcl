@@ -30,7 +30,7 @@ update_ip_catalog
 # Create block design
 exec sed -i "s|CONFIG.Coe_File {.*}|CONFIG.Coe_File {$coe_path}|g" occamy_u55c_bd.tcl
 #source occamy_u55c_bd.tcl
-source occamy_u55c_bd.tcl
+source occamy_u55c_no_eth_ext_jtag_bd.tcl
 
 # Add constraint files
 add_files -fileset constrs_1 -norecurse occamy_u55c_impl.xdc
