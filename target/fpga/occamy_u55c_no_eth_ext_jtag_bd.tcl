@@ -709,7 +709,7 @@ proc create_root_design { parentCell } {
   set util_ds_buf [ create_bd_cell -type ip -vlnv xilinx.com:ip:util_ds_buf:2.2 util_ds_buf ]
   set_property -dict [ list \
    CONFIG.C_BUF_TYPE {IBUFDSGTE} \
-   CONFIG.DIFF_CLK_IN_BOARD_INTERFACE {pcie_refclk} \
+   #CONFIG.DIFF_CLK_IN_BOARD_INTERFACE {pcie_refclk} \
    CONFIG.USE_BOARD_FLOW {true} \
  ] $util_ds_buf
 
@@ -858,7 +858,14 @@ proc create_root_design { parentCell } {
   connect_bd_net -net xlconcat_1_dout [get_bd_pins concat_irq/dout] [get_bd_pins occamy/ext_irq_i]
   connect_bd_net -net xlconcat_2_dout [get_bd_pins concat_rst_core/dout] [get_bd_pins rst_or_core/Op1]
   connect_bd_net -net xxv_ethernet_0_dclkwiz_locked [get_bd_pins util_vector_logic/Op1] [get_bd_pins xxv_ethernet_0_dclkwiz/locked]
+  
+  set_property CONFIG.DIFF_CLK_IN_BOARD_INTERFACE pcie_refclk [get_bd_cells -quiet /util_ds_buf]
+  #delete_bd_objs -quiet /pcie_refclk_1 /pcie_refclk
+  #set_property CONFIG.FREQ_HZ 100000000 /pcie_refclk
+  #connect_bd_intf_net /pcie_refclk /util_ds_buf/CLK_IN_D
+  #set_property CONFIG.FREQ_HZ 100000000 /pcie_refclk
 
+  
   # Create address segments
   assign_bd_address -offset 0x00000000 -range 0x0001000000000000 -target_address_space [get_bd_addr_spaces axi_dma_0/Data_MM2S] [get_bd_addr_segs occamy/s_axi_pcie/reg0] -force
   assign_bd_address -offset 0x00000000 -range 0x0001000000000000 -target_address_space [get_bd_addr_spaces axi_dma_0/Data_S2MM] [get_bd_addr_segs occamy/s_axi_pcie/reg0] -force
