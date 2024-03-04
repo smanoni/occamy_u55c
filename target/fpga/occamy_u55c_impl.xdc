@@ -14,9 +14,9 @@
 #set_property IOSTANDARD LVCMOS18 [get_ports uart_rx_i_0]
 #set_property PACKAGE_PIN BN26 [get_ports uart_tx_o_0]
 #set_property IOSTANDARD LVCMOS18 [get_ports uart_tx_o_0]
-set_property PACKAGE_PIN BJ41 [get_ports uart_rx_i_0]
+set_property PACKAGE_PIN BP47 [get_ports uart_rx_i_0]
 set_property IOSTANDARD LVCMOS18 [get_ports uart_rx_i_0]
-set_property PACKAGE_PIN BH41 [get_ports uart_tx_o_0]
+set_property PACKAGE_PIN BN47 [get_ports uart_tx_o_0]
 set_property IOSTANDARD LVCMOS18 [get_ports uart_tx_o_0]
 
 # CPU_RESET pushbutton switch
