@@ -31,3 +31,20 @@ The following files are released under Apache License 2.0 (`Apache-2.0`) see `LI
 The following files are released under Solderpad v0.51 (`SHL-0.51`) see `hw/LICENSE`:
 
 - `hw/`
+
+# How to build and load the bootrom (last important step to make the hardware work)
+Once the bitstream is generated, the bootrom is to load. The bootrom contains the device tree of Occamy and the bootstrap code for the Snitch Cluster.
+On Lagrev add to PATH the riscv-unknown-elf toolchain:
+```
+export PATH=/usr/pack/riscv-1.0-kgf/riscv64-gcc-11.2.0/bin:$PATH
+```
+Then go to bootrom directory and launch the following commands:
+```
+touch empty.bin
+UBOOT_SPL_BIN=empty.bin make
+```
+At this point in the Vivado Hardware Manager with the FPGA connected and programmed, the bootrom-spl.bin file can be sourced via the TCL console:
+```
+source bootrom-spl.bin
+```
+Once it is sourced, the FPGA needs to be reset, toggle the VIO reset of Occamy.
