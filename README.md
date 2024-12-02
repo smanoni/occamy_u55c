@@ -45,6 +45,6 @@ UBOOT_SPL_BIN=empty.bin make
 ```
 At this point in the Vivado Hardware Manager with the FPGA connected and programmed, the bootrom-spl.bin file can be sourced via the TCL console:
 ```
-source bootrom-spl.bin
+source bootrom-spl.tcl
 ```
 Once it is sourced, the FPGA needs to be reset, toggle the VIO reset of Occamy.
